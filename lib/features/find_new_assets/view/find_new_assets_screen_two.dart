@@ -1,33 +1,20 @@
 import 'package:em_asset_keeper/features/find_new_assets/view_model/find_new_assets_two_view_model.dart';
 import 'package:em_asset_keeper/features/widgets/bluetooth_device_card.dart';
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
-class FindNewAssetsScreenTwo extends StatefulWidget {
-  @override
-  State<FindNewAssetsScreenTwo> createState() => _FindNewAssetsScreenTwoState();
-}
-
-class _FindNewAssetsScreenTwoState extends State<FindNewAssetsScreenTwo> {
-  final TextEditingController _searchController = TextEditingController();
-  String _searchQuery = '';
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
+class FindNewAssetsScreenTwo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) => FindNewAssetsTwoViewModel(),
       child: Scaffold(
         backgroundColor: Colors.white,
-        appBar: _buildAppBar(),
+        appBar: _buildAppBar(context),
         body: Column(
           children: [
-            _buildSearchField(),
+            _buildSearchField(context),
             _buildDevicesList(),
           ],
         ),
@@ -35,7 +22,7 @@ class _FindNewAssetsScreenTwoState extends State<FindNewAssetsScreenTwo> {
     );
   }
 
-  AppBar _buildAppBar() {
+  AppBar _buildAppBar(BuildContext context) {
     return AppBar(
       backgroundColor: Colors.white,
       title: const Text("Find New Assets", style: TextStyle(fontSize: 16)),
@@ -47,42 +34,40 @@ class _FindNewAssetsScreenTwoState extends State<FindNewAssetsScreenTwo> {
         ),
         Consumer<FindNewAssetsTwoViewModel>(
           builder: (context, viewModel, _) => IconButton(
-            icon: Icon(viewModel.isPlaying ? Icons.pause : Icons.play_arrow),
-            onPressed: () => viewModel.togglePlayPause(),
+            icon: Icon(viewModel.isScanning ? Icons.pause : Icons.play_arrow),
+            onPressed: () {
+                viewModel.toggleScan();
+            },
           ),
         ),
       ],
     );
   }
 
-  Widget _buildSearchField() {
+  Widget _buildSearchField(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: TextField(
-        controller: _searchController,
-        onChanged: (value) {
-          setState(() {
-            _searchQuery = value;
-          });
+      child: Consumer<FindNewAssetsTwoViewModel>(
+        builder: (context, viewModel, _) {
+          return TextField(
+            onChanged: viewModel.updateSearchQuery,
+            decoration: InputDecoration(
+              hintText: 'Search by name or mac address',
+              prefixIcon: const Icon(Icons.search),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              suffixIcon: viewModel.searchQuery.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        viewModel.updateSearchQuery('');
+                      },
+                    )
+                  : null,
+            ),
+          );
         },
-        decoration: InputDecoration(
-          hintText: 'Search by name or mac address',
-          prefixIcon: const Icon(Icons.search),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          suffixIcon: _searchQuery.isNotEmpty
-              ? IconButton(
-                  icon: const Icon(Icons.clear),
-                  onPressed: () {
-                    setState(() {
-                      _searchController.clear();
-                      _searchQuery = '';
-                    });
-                  },
-                )
-              : null,
-        ),
       ),
     );
   }
@@ -91,18 +76,22 @@ class _FindNewAssetsScreenTwoState extends State<FindNewAssetsScreenTwo> {
     return Expanded(
       child: Consumer<FindNewAssetsTwoViewModel>(
         builder: (context, viewModel, _) {
-          final devices = viewModel.getFilteredDevices(_searchQuery);
-          return ListView.builder(
-            itemCount: devices.length,
-            itemBuilder: (context, index) {
-              final device = devices[index];
-              return BluetoothDeviceCard(
-                name: device.name,
-                ipAddress: device.macAddress,
-                signalStrength: device.signalStrength,
-              );
-            },
-          );
+          final devices = viewModel.getFilteredDevices();
+          return devices.isEmpty
+              ? const Center(child: Text("No devices found"))
+              : ListView.builder(
+                  itemCount: devices.length,
+                  itemBuilder: (context, index) {
+                    final device = devices[index];
+                    return BluetoothDeviceCard(
+                      name: device.device.name.isNotEmpty
+                          ? device.device.name
+                          : "Unknown Device",
+                      ipAddress: device.device.id.toString(),
+                      signalStrength: device.rssi.toString(),
+                    );
+                  },
+                );
         },
       ),
     );

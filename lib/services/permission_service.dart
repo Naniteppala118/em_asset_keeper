@@ -1,19 +1,30 @@
 import 'package:permission_handler/permission_handler.dart';
 
 class PermissionService {
-  static Future<void> requestPermissions() async {
-    Map<Permission, PermissionStatus> statuses = await [
-      Permission.location,
-      Permission.bluetooth,
-      Permission.bluetoothScan,
-      Permission.bluetoothConnect,
-      Permission.notification,
-    ].request();
+  static Future<void> requestPermissionsSequentially() async {
+    await _requestPermission(Permission.bluetooth);
+    await _requestPermission(Permission.bluetoothScan);
+    await _requestPermission(Permission.bluetoothConnect);
+    await _requestPermission(Permission.location);
+    await _requestPermission(Permission.notification);
+  }
 
-    // Handle permission results
-    statuses.forEach((permission, status) {
-      print('$permission: $status');
-    });
+  static Future<void> _requestPermission(Permission permission) async {
+    if (await permission.isGranted) {
+      print('${permission.toString()} is already granted.');
+      return;
+    }
+
+    PermissionStatus status = await permission.request();
+    
+    if (status.isGranted) {
+      print('${permission.toString()} granted.');
+    } else if (status.isDenied) {
+      print('${permission.toString()} denied.');
+    } else if (status.isPermanentlyDenied) {
+      print('${permission.toString()} permanently denied. Open settings to enable.');
+      openAppSettings(); // Open settings if permanently denied
+    }
   }
 
   static Future<bool> checkPermissions() async {

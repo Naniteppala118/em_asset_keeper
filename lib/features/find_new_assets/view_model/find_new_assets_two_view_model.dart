@@ -1,46 +1,64 @@
 import 'package:em_asset_keeper/features/find_new_assets/model/bluetooth_device_model.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 class FindNewAssetsTwoViewModel extends ChangeNotifier {
   bool _isPlaying = false;
   bool get isPlaying => _isPlaying;
-  List<BluetoothDevice> devices = [
-    BluetoothDevice(
-      name: 'Asset Tracker 1',
-      macAddress: '26:D1:6F:B1:08:01',
-      signalStrength: 'Strong'
-    ),
-    BluetoothDevice(
-      name: 'Temperature Sensor',
-      macAddress: '26:D1:6F:B1:08:02',
-      signalStrength: 'Medium'
-    ),
-    BluetoothDevice(
-      name: 'Location Beacon',
-      macAddress: '26:D1:6F:B1:08:03',
-      signalStrength: 'Weak'
-    ),
-  ];
+
+  bool _isScanning = false;
+  bool get isScanning => _isScanning;
+
+  List<ScanResult> _devices = [];
+  List<ScanResult> get devices => _devices;
+
+  String _searchQuery = '';
+  String get searchQuery => _searchQuery;
 
   void togglePlayPause() {
     _isPlaying = !_isPlaying;
     notifyListeners();
   }
 
-  void updateDevices(List<BluetoothDevice> newDevices) {
-    devices = newDevices;
+  void startScan() {
+    if (_isScanning) return;
+
+    _devices.clear();
+    _isScanning = true;
+    notifyListeners();
+
+    FlutterBluePlus.startScan(timeout: const Duration(seconds: 5));
+
+    FlutterBluePlus.scanResults.listen((results) {
+      _devices = results;
+      notifyListeners();
+    });
+  }
+
+  void stopScan() {
+    if (!_isScanning) return;
+
+    FlutterBluePlus.stopScan();
+    _isScanning = false;
     notifyListeners();
   }
 
-  List<BluetoothDevice> getFilteredDevices(String query) {
-    if (query.isEmpty) return devices;
-    
-    final lowercaseQuery = query.toLowerCase();
-    return devices.where((device) =>
-      device.name.toLowerCase().contains(lowercaseQuery) || 
-      device.macAddress.toLowerCase().contains(lowercaseQuery)
-    ).toList();
+  void toggleScan() {
+    _isScanning ? stopScan() : startScan();
   }
 
-  
+  void updateSearchQuery(String query) {
+    _searchQuery = query;
+    notifyListeners();
+  }
+
+  List<ScanResult> getFilteredDevices() {
+    if (_searchQuery.isEmpty) return _devices;
+
+    final lowercaseQuery = _searchQuery.toLowerCase();
+    return _devices.where((device) =>
+      device.device.name.toLowerCase().contains(lowercaseQuery) ||
+      device.device.id.toString().toLowerCase().contains(lowercaseQuery)
+    ).toList();
+  }
 }
