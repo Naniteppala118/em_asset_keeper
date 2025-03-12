@@ -1,6 +1,7 @@
 import 'package:em_asset_keeper/features/dashboard/dashboard.dart';
 import 'package:em_asset_keeper/features/find_new_assets/view/bluetooth_scan_screen.dart';
 import 'package:em_asset_keeper/features/find_new_assets/view/find_new_assets_screen_two.dart';
+import 'package:em_asset_keeper/features/find_new_assets/view/view_with_beacons.dart';
 import 'package:em_asset_keeper/features/splash/splash_view.dart';
 import 'package:em_asset_keeper/routes/route_list.dart';
 import 'package:flutter/material.dart';
@@ -31,7 +32,7 @@ class AppRouter {
         GoRoute(
           path: RoutesLists.findNewAssetsTwo,
           builder: (BuildContext context, GoRouterState state) {
-            return  FindNewAssetsScreenTwo();
+            return  ViewWithBeacons();
           },
         ),
         

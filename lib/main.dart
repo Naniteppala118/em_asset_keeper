@@ -1,13 +1,11 @@
 import 'package:em_asset_keeper/features/find_new_assets/view_model/find_new_assets_two_view_model.dart';
 import 'package:em_asset_keeper/routes/app_route.dart';
 import 'package:em_asset_keeper/services/notification_service.dart';
-import 'package:em_asset_keeper/services/permission_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await PermissionService.requestPermissionsSequentially();
 
   await NotificationService.initialize();
 

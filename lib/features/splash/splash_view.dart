@@ -1,5 +1,6 @@
 import 'package:em_asset_keeper/routes/route_list.dart';
 import 'package:em_asset_keeper/services/navigation_service.dart';
+import 'package:em_asset_keeper/services/permission_service.dart';
 import 'package:flutter/material.dart';
 
 class SplashScren extends StatefulWidget {
@@ -32,7 +33,7 @@ class _SplashScrenState extends State<SplashScren> {
 
   checkUserSession() async {
     await Future.delayed(const Duration(seconds: 3));
-    //await PermissionService.requestPermissionsSequentially();
+    await PermissionService.requestPermissionsSequentially();
     
 
     NavigationServices().replaceWith(RoutesLists.dashboard);
